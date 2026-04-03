@@ -46,9 +46,9 @@
 
 1. Use the installer or portable app built from `dist`.
 2. Open SyncPad.
-3. Go to `Settings`.
-4. Choose `Connect to a host`.
-5. Enter `http://100.119.231.37:3210/`.
+3. It should already open in `Connect to a host` mode by default.
+4. If needed, go to `Settings`.
+5. Confirm the host address is `http://100.119.231.37:3210/`.
 6. Save and start using the shared note library.
 
 ## Current Limitations

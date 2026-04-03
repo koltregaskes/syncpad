@@ -123,6 +123,8 @@ The easiest client setup path now is:
 
 After that, the other machine behaves like a dedicated SyncPad client.
 
+Fresh installs now default to `Client` mode, which is the safer setup for every machine except the always-on host.
+
 ## Repo Layout
 
 - `src/main.js` - Electron main process and embedded private server bootstrap

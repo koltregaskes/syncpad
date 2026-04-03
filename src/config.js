@@ -3,7 +3,7 @@ const fsp = require("fs/promises");
 const path = require("path");
 
 const DEFAULT_CONFIG = {
-  mode: "host",
+  mode: "client",
   host: "100.119.231.37",
   port: 3210,
   remoteOrigin: "http://100.119.231.37:3210"

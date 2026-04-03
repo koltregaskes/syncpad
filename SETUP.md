@@ -25,6 +25,8 @@ If the app is in:
 - `Host` mode, it starts the private server and the desktop app
 - `Client` mode, it opens the desktop app and connects to the saved host
 
+Fresh installs default to `Client` mode.
+
 ## Run The Private Web App Only
 
 ```powershell
