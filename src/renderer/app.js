@@ -2,13 +2,15 @@ const state = {
   notes: [],
   filteredNotes: [],
   activeNoteId: null,
-  saveTimer: null
+  saveTimer: null,
+  lastStatus: null
 };
 
 const elements = {
   notesList: document.getElementById("notes-list"),
   searchInput: document.getElementById("search-input"),
   newNoteButton: document.getElementById("new-note-button"),
+  duplicateNoteButton: document.getElementById("duplicate-note-button"),
   deleteNoteButton: document.getElementById("delete-note-button"),
   titleInput: document.getElementById("title-input"),
   contentInput: document.getElementById("content-input"),
@@ -33,6 +35,7 @@ function getActiveNote() {
 function setEditorEnabled(enabled) {
   elements.titleInput.disabled = !enabled;
   elements.contentInput.disabled = !enabled;
+  elements.duplicateNoteButton.disabled = !enabled;
   elements.deleteNoteButton.disabled = !enabled;
 }
 
@@ -134,6 +137,18 @@ async function createNote() {
   elements.titleInput.select();
 }
 
+async function duplicateActiveNote() {
+  const note = getActiveNote();
+  if (!note) {
+    return;
+  }
+
+  const duplicate = await window.syncPad.duplicateNote(note.id);
+  await refreshNotes(duplicate.id);
+  elements.titleInput.focus();
+  elements.titleInput.select();
+}
+
 async function deleteActiveNote() {
   const note = getActiveNote();
   if (!note) {
@@ -176,8 +191,49 @@ function queueSave() {
   }, 400);
 }
 
+function handleKeyboardShortcuts(event) {
+  const modifierPressed = event.ctrlKey || event.metaKey;
+  if (!modifierPressed) {
+    return;
+  }
+
+  const key = event.key.toLowerCase();
+
+  if (key === "n") {
+    event.preventDefault();
+    createNote().catch(console.error);
+    return;
+  }
+
+  if (key === "d") {
+    const note = getActiveNote();
+    if (!note) {
+      return;
+    }
+
+    event.preventDefault();
+    duplicateActiveNote().catch(console.error);
+    return;
+  }
+
+  if (key === "s") {
+    const note = getActiveNote();
+    if (!note) {
+      return;
+    }
+
+    event.preventDefault();
+    window.clearTimeout(state.saveTimer);
+    saveActiveNote().catch((error) => {
+      console.error(error);
+      elements.saveState.textContent = "Save failed";
+    });
+  }
+}
+
 async function bootstrap() {
   const status = await window.syncPad.getStatus();
+  state.lastStatus = status;
   elements.syncStatus.textContent = status.sync;
   elements.storagePath.textContent = status.storageFile;
 
@@ -185,13 +241,17 @@ async function bootstrap() {
   elements.newNoteButton.addEventListener("click", () => {
     createNote().catch(console.error);
   });
+  elements.duplicateNoteButton.addEventListener("click", () => {
+    duplicateActiveNote().catch(console.error);
+  });
   elements.deleteNoteButton.addEventListener("click", () => {
     deleteActiveNote().catch(console.error);
   });
   elements.titleInput.addEventListener("input", queueSave);
   elements.contentInput.addEventListener("input", queueSave);
+  window.addEventListener("keydown", handleKeyboardShortcuts);
 
-  await refreshNotes();
+  await refreshNotes(status.lastOpenNoteId);
 
   if (!state.activeNoteId) {
     await createNote();

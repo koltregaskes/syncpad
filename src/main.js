@@ -22,13 +22,14 @@ function createWindow() {
 }
 
 ipcMain.handle("app:status", async () => ({
-  storageFile: store.getStoreFile(),
+  ...(await store.getStatus()),
   sync: "Local only"
 }));
 
 ipcMain.handle("notes:list", () => store.listNotes());
 ipcMain.handle("notes:get", (_, noteId) => store.getNote(noteId));
 ipcMain.handle("notes:create", (_, title) => store.createNote(title));
+ipcMain.handle("notes:duplicate", (_, noteId) => store.duplicateNote(noteId));
 ipcMain.handle("notes:save", (_, noteId, updates) => store.saveNote(noteId, updates));
 ipcMain.handle("notes:delete", (_, noteId) => store.deleteNote(noteId));
 

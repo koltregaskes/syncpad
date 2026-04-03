@@ -66,6 +66,15 @@ async function listNotes() {
   return sortNotes(state.notes);
 }
 
+async function getStatus() {
+  const state = await loadState();
+  return {
+    noteCount: state.notes.length,
+    lastOpenNoteId: state.lastOpenNoteId || null,
+    storageFile: getStoreFile()
+  };
+}
+
 async function getNote(noteId) {
   const state = await loadState();
   return state.notes.find((note) => note.id === noteId) || null;
@@ -78,6 +87,30 @@ async function createNote(title = "Untitled note") {
     id: randomUUID(),
     title,
     content: "",
+    createdAt: now,
+    updatedAt: now
+  };
+
+  state.notes.push(note);
+  state.lastOpenNoteId = note.id;
+  await saveState(state);
+
+  return note;
+}
+
+async function duplicateNote(noteId) {
+  const state = await loadState();
+  const source = state.notes.find((item) => item.id === noteId);
+
+  if (!source) {
+    throw new Error("Note not found");
+  }
+
+  const now = new Date().toISOString();
+  const note = {
+    id: randomUUID(),
+    title: `${source.title || "Untitled note"} copy`,
+    content: source.content || "",
     createdAt: now,
     updatedAt: now
   };
@@ -126,7 +159,9 @@ async function deleteNote(noteId) {
 module.exports = {
   createNote,
   deleteNote,
+  duplicateNote,
   getNote,
+  getStatus,
   getStoreFile,
   listNotes,
   loadState,
