@@ -4,6 +4,8 @@ const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 
 const store = require("./store");
 
+app.disableHardwareAcceleration();
+
 function createWindow() {
   const window = new BrowserWindow({
     width: 1280,

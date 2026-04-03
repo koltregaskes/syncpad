@@ -1,6 +1,6 @@
 {
   "name": "syncpad",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A desktop-first notes app for Windows with local storage and a future cloud sync path.",
   "main": "src/main.js",
   "scripts": {

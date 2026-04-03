@@ -13,3 +13,4 @@
 - Added desktop shortcuts for new, duplicate, and save
 - Added backup export and import inside the app
 - Added live word and character counts in the editor footer
+- Disabled hardware acceleration to avoid Electron GPU launch crashes on this Windows setup

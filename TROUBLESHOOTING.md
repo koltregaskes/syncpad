@@ -28,3 +28,4 @@ You can override that root with `MYDATA_DIR`.
 
 - Close any stuck Electron processes
 - Start the app again with `npm.cmd start`
+- SyncPad already disables hardware acceleration to avoid the GPU launch crash seen on some Windows machines
