@@ -6,7 +6,8 @@ const DEFAULT_CONFIG = {
   mode: "client",
   host: "100.119.231.37",
   port: 3210,
-  remoteOrigin: "http://100.119.231.37:3210"
+  remoteOrigin: "http://100.119.231.37:3210",
+  setupComplete: false
 };
 
 function getBaseDir() {
@@ -59,6 +60,10 @@ function normalizeOrigin(value, fallbackHost, fallbackPort) {
   return `http://${fallbackHost}:${fallbackPort}`;
 }
 
+function normalizeSetupComplete(value, fallback = false) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
 async function ensureConfig() {
   const dir = getConfigDir();
   const file = getConfigFile();
@@ -98,7 +103,8 @@ async function readConfig() {
     mode: normalizeMode(parsed.mode),
     host,
     port,
-    remoteOrigin: normalizeOrigin(parsed.remoteOrigin, host, port)
+    remoteOrigin: normalizeOrigin(parsed.remoteOrigin, host, port),
+    setupComplete: normalizeSetupComplete(parsed.setupComplete)
   };
 }
 
@@ -110,7 +116,8 @@ async function writeConfig(nextConfig) {
     mode: normalizeMode(nextConfig.mode),
     host,
     port,
-    remoteOrigin: normalizeOrigin(nextConfig.remoteOrigin, host, port)
+    remoteOrigin: normalizeOrigin(nextConfig.remoteOrigin, host, port),
+    setupComplete: normalizeSetupComplete(nextConfig.setupComplete, true)
   };
 
   await fsp.writeFile(file, JSON.stringify(config, null, 2), "utf-8");
@@ -128,7 +135,8 @@ function readConfigSync() {
     mode: normalizeMode(parsed.mode),
     host,
     port,
-    remoteOrigin: normalizeOrigin(parsed.remoteOrigin, host, port)
+    remoteOrigin: normalizeOrigin(parsed.remoteOrigin, host, port),
+    setupComplete: normalizeSetupComplete(parsed.setupComplete)
   };
 }
 

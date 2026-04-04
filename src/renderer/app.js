@@ -61,7 +61,14 @@ const elements = {
   settingsAccessUrl: document.getElementById("settings-access-url"),
   settingsCopyButton: document.getElementById("settings-copy-button"),
   settingsOpenButton: document.getElementById("settings-open-button"),
-  settingsSaveButton: document.getElementById("settings-save-button")
+  settingsSaveButton: document.getElementById("settings-save-button"),
+  onboardingModal: document.getElementById("onboarding-modal"),
+  onboardingBackdrop: document.getElementById("onboarding-backdrop"),
+  onboardingCloseButton: document.getElementById("onboarding-close-button"),
+  onboardingHostButton: document.getElementById("onboarding-host-button"),
+  onboardingClientButton: document.getElementById("onboarding-client-button"),
+  onboardingOpenSettingsButton: document.getElementById("onboarding-open-settings-button"),
+  onboardingHostAddress: document.getElementById("onboarding-host-address")
 };
 
 const PREFERENCES_KEY = "syncpad:preferences";
@@ -110,6 +117,19 @@ function getActiveNote() {
 
 function buildOrigin(host, port) {
   return `http://${host}:${port}`;
+}
+
+function getEffectiveConfig() {
+  const candidateHost = String(state.config?.host || state.appStatus?.bindHost || "100.119.231.37").trim();
+  const host = candidateHost || "100.119.231.37";
+  const port = Number(state.config?.port || state.appStatus?.bindPort || 3210) || 3210;
+  const remoteOrigin = (state.config?.remoteOrigin || state.appStatus?.remoteOrigin || buildOrigin(host, port)).trim();
+
+  return {
+    host,
+    port,
+    remoteOrigin
+  };
 }
 
 async function copyText(value) {
@@ -645,6 +665,20 @@ function closeSettingsModal() {
   elements.settingsModal.hidden = true;
 }
 
+function openOnboardingModal() {
+  if (!syncPadDesktop) {
+    return;
+  }
+
+  const effectiveConfig = getEffectiveConfig();
+  elements.onboardingHostAddress.textContent = effectiveConfig.remoteOrigin;
+  elements.onboardingModal.hidden = false;
+}
+
+function closeOnboardingModal() {
+  elements.onboardingModal.hidden = true;
+}
+
 function hydrateSettingsForm() {
   const config = state.config;
   if (!config) {
@@ -683,7 +717,8 @@ async function saveSettings() {
     mode: elements.settingsMode.value,
     host: elements.settingsHost.value.trim(),
     port: Number(elements.settingsPort.value || "3210"),
-    remoteOrigin: elements.settingsRemoteOrigin.value.trim()
+    remoteOrigin: elements.settingsRemoteOrigin.value.trim(),
+    setupComplete: true
   };
 
   const saved = await syncPadDesktop.saveConfig(updates);
@@ -691,6 +726,28 @@ async function saveSettings() {
   state.syncLabel = saved.mode === "host" ? "Private Tailscale sync app" : "Remote SyncPad client";
   state.serverTone = saved.mode === "host" ? "connected" : "local";
   closeSettingsModal();
+  closeOnboardingModal();
+}
+
+async function completeOnboarding(mode) {
+  if (!syncPadDesktop) {
+    return;
+  }
+
+  const effectiveConfig = getEffectiveConfig();
+  const nextConfig = {
+    mode,
+    host: effectiveConfig.host,
+    port: effectiveConfig.port,
+    remoteOrigin: effectiveConfig.remoteOrigin,
+    setupComplete: true
+  };
+
+  const saved = await syncPadDesktop.saveConfig(nextConfig);
+  state.config = saved;
+  state.syncLabel = saved.mode === "host" ? "Private Tailscale sync app" : "Remote SyncPad client";
+  state.serverTone = saved.mode === "host" ? "connected" : "local";
+  closeOnboardingModal();
 }
 
 function handleKeyboardShortcuts(event) {
@@ -894,7 +951,29 @@ async function bootstrap() {
       updateSyncStatus("Settings save failed", "error");
     });
   });
+  elements.onboardingBackdrop.addEventListener("click", closeOnboardingModal);
+  elements.onboardingCloseButton.addEventListener("click", closeOnboardingModal);
+  elements.onboardingHostButton.addEventListener("click", () => {
+    completeOnboarding("host").catch((error) => {
+      console.error(error);
+      updateSyncStatus("Host setup failed", "error");
+    });
+  });
+  elements.onboardingClientButton.addEventListener("click", () => {
+    completeOnboarding("client").catch((error) => {
+      console.error(error);
+      updateSyncStatus("Client setup failed", "error");
+    });
+  });
+  elements.onboardingOpenSettingsButton.addEventListener("click", () => {
+    closeOnboardingModal();
+    openSettingsModal();
+  });
   window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !elements.onboardingModal.hidden) {
+      closeOnboardingModal();
+      return;
+    }
     if (event.key === "Escape" && !elements.settingsModal.hidden) {
       closeSettingsModal();
       return;
@@ -914,6 +993,10 @@ async function bootstrap() {
   }
 
   setupLiveSync();
+
+  if (syncPadDesktop && state.config?.setupComplete !== true) {
+    openOnboardingModal();
+  }
 }
 
 bootstrap().catch((error) => {

@@ -107,6 +107,50 @@
       </main>
     </div>
 
+    <div id="onboarding-modal" class="settings-modal" hidden>
+      <div id="onboarding-backdrop" class="settings-backdrop"></div>
+      <section class="settings-panel onboarding-panel" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+        <div class="settings-header">
+          <div>
+            <p class="eyebrow">Welcome To SyncPad</p>
+            <h3 id="onboarding-title">How should this copy of SyncPad behave?</h3>
+            <p class="header-hint">
+              Most machines should connect to your always-on host. Only one machine needs to host the library.
+            </p>
+          </div>
+          <button id="onboarding-close-button" class="ghost-button ghost-button--small">Close</button>
+        </div>
+
+        <div class="onboarding-choices">
+          <button id="onboarding-host-button" class="onboarding-choice" type="button">
+            <span class="onboarding-choice__eyebrow">Host Mode</span>
+            <strong>This is the always-on host machine</strong>
+            <span>Run the private note library here so your other devices can connect to it.</span>
+          </button>
+
+          <button id="onboarding-client-button" class="onboarding-choice" type="button">
+            <span class="onboarding-choice__eyebrow">Client Mode</span>
+            <strong>This machine should connect to my host</strong>
+            <span>Use SyncPad here without running the library server on this machine.</span>
+          </button>
+        </div>
+
+        <div class="settings-summary">
+          <p>
+            <strong>Current host address:</strong>
+            <span id="onboarding-host-address">http://100.119.231.37:3210/</span>
+          </p>
+          <p class="onboarding-note">
+            You can change the address and other details later in Settings. This step just gives each machine a clean starting point.
+          </p>
+        </div>
+
+        <div class="settings-actions">
+          <button id="onboarding-open-settings-button" class="ghost-button">Review settings first</button>
+        </div>
+      </section>
+    </div>
+
     <div id="settings-modal" class="settings-modal" hidden>
       <div id="settings-backdrop" class="settings-backdrop"></div>
       <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">

@@ -24,6 +24,7 @@ The goal is straightforward: something that feels as quick and lightweight as No
 - Changes appear on connected devices almost immediately through live updates
 - No account system or public cloud is required
 - Host and client setup is saved in a local config file so you do not need to keep re-entering addresses
+- A first-run setup guide now helps each machine choose whether it should host the library or connect to it
 
 ## First Version Scope
 
@@ -62,6 +63,7 @@ The app now works as:
 - Markdown preview, find/replace, wrap toggle, zoom controls, and live word/character counts are implemented
 - Private live sync works when the app is hosted on `127.0.0.1` for one machine or on your Tailscale IP for your own devices
 - A saved host/client setup screen is built into the desktop app
+- A first-run host/client choice now appears in the desktop app for easier setup on new machines
 - Windows packaging now produces an installer and a portable app build
 
 ## Next Steps

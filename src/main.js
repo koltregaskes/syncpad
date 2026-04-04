@@ -185,6 +185,7 @@ ipcMain.handle("app:status", async () => ({
   bindHost: runtimeConfig?.host || "127.0.0.1",
   bindPort: runtimeConfig?.port || 3210,
   remoteOrigin: runtimeConfig?.remoteOrigin || "",
+  setupComplete: runtimeConfig?.setupComplete === true,
   sync: isHostMode() ? "Private Tailscale sync app" : "Remote SyncPad client"
 }));
 

@@ -445,6 +445,10 @@ p {
   gap: 18px;
 }
 
+.onboarding-panel {
+  width: min(840px, calc(100vw - 32px));
+}
+
 .settings-header,
 .settings-actions {
   display: flex;
@@ -491,6 +495,51 @@ p {
 
 .settings-summary strong {
   color: var(--text);
+}
+
+.onboarding-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.onboarding-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(17, 24, 36, 0.92), rgba(15, 23, 42, 0.84));
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.onboarding-choice:hover {
+  transform: translateY(-1px);
+  border-color: rgba(110, 231, 183, 0.34);
+}
+
+.onboarding-choice strong {
+  font-size: 18px;
+}
+
+.onboarding-choice span:last-child {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.onboarding-choice__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.onboarding-note {
+  margin-top: 10px;
 }
 
 .footer-meta {
@@ -567,6 +616,10 @@ p {
   }
 
   .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-choices {
     grid-template-columns: 1fr;
   }
 }
