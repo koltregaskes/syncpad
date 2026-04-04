@@ -28,3 +28,10 @@
 - Added saved host/client app configuration
 - Added a settings panel and desktop app menu for setup
 - Added Windows installer and portable build output
+
+## 0.3.1
+
+- Added a first-run setup guide so each machine can quickly choose host or client mode
+- Added a reusable quick setup entry in the desktop app menu
+- Saved a `setupComplete` flag in local app config so new installs behave more clearly
+- Updated the docs to reflect the guided setup flow

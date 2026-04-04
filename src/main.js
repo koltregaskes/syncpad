@@ -111,6 +111,12 @@ function buildMenu() {
           }
         },
         {
+          label: "Show Quick Setup",
+          click: () => {
+            BrowserWindow.getAllWindows()[0]?.webContents.send("onboarding:open");
+          }
+        },
+        {
           label: "Copy Access Address",
           enabled: Boolean(networkAddress),
           click: () => {

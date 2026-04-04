@@ -855,6 +855,9 @@ async function bootstrapDesktopSettings() {
   syncPadDesktop.onOpenSettings(() => {
     openSettingsModal();
   });
+  syncPadDesktop.onShowOnboarding(() => {
+    openOnboardingModal();
+  });
 }
 
 async function bootstrap() {

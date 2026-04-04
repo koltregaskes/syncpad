@@ -17,5 +17,9 @@ contextBridge.exposeInMainWorld("syncPad", {
   onOpenSettings: (callback) => {
     ipcRenderer.removeAllListeners("settings:open");
     ipcRenderer.on("settings:open", callback);
+  },
+  onShowOnboarding: (callback) => {
+    ipcRenderer.removeAllListeners("onboarding:open");
+    ipcRenderer.on("onboarding:open", callback);
   }
 });
