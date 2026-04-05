@@ -5,6 +5,7 @@
 - a desktop Electron shell for your main Windows machine
 - a private web app that can sync live across your own devices over Tailscale
 - a Windows installer and portable app build for easier client setup
+- an installable browser client for desktop or Android PWA use
 
 The goal is straightforward: something that feels as quick and lightweight as Notepad, but stays in sync across your own machines without pushing your notes onto the public web.
 
