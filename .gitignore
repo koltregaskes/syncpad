@@ -18,3 +18,11 @@ planning-local/
 *.tmp
 *.bak
 *.backup
+
+# AutoResearch
+.autolab/
+
+# Env
+.env
+.env.*
+!.env.example
