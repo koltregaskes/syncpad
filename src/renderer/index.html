@@ -106,11 +106,22 @@
         <footer class="editor-footer">
           <span id="save-state">No note selected</span>
           <div class="footer-meta">
-            <span id="note-stats">0 words | 0 characters</span>
-            <span id="caret-position">Ln 1, Col 1</span>
-            <span id="zoom-label">100%</span>
-            <span id="server-origin"></span>
-            <span id="storage-path"></span>
+            <div class="footer-verify">
+              <span class="footer-verify__eyebrow">Verification snapshot</span>
+              <div class="footer-verify__items">
+                <span id="runtime-shell" class="footer-chip"></span>
+                <span id="runtime-mode" class="footer-chip"></span>
+                <span id="runtime-access" class="footer-chip"></span>
+                <span id="runtime-storage" class="footer-chip"></span>
+                <span id="runtime-config" class="footer-chip"></span>
+              </div>
+            </div>
+            <div class="footer-meta__stats">
+              <span id="note-stats">0 words | 0 characters</span>
+              <span id="caret-position">Ln 1, Col 1</span>
+              <span id="zoom-label">100%</span>
+            </div>
+            <button id="copy-verification-button" class="ghost-button ghost-button--small">Copy verification</button>
           </div>
         </footer>
       </main>

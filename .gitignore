@@ -18,6 +18,8 @@ planning-local/
 *.tmp
 *.bak
 *.backup
+.syncpad-serve.log
+.playwright-cli/
 
 # AutoResearch
 .autolab/

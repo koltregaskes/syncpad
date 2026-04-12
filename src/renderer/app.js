@@ -45,8 +45,12 @@ const elements = {
   caretPosition: document.getElementById("caret-position"),
   zoomLabel: document.getElementById("zoom-label"),
   syncStatus: document.getElementById("sync-status"),
-  storagePath: document.getElementById("storage-path"),
-  serverOrigin: document.getElementById("server-origin"),
+  runtimeShell: document.getElementById("runtime-shell"),
+  runtimeMode: document.getElementById("runtime-mode"),
+  runtimeAccess: document.getElementById("runtime-access"),
+  runtimeStorage: document.getElementById("runtime-storage"),
+  runtimeConfig: document.getElementById("runtime-config"),
+  copyVerificationButton: document.getElementById("copy-verification-button"),
   editorShell: document.getElementById("editor-shell"),
   modeButtons: Array.from(document.querySelectorAll("[data-mode]")),
   settingsModal: document.getElementById("settings-modal"),
@@ -257,7 +261,34 @@ async function copyText(value) {
     return;
   }
 
-  await navigator.clipboard.writeText(String(value || ""));
+  const text = String(value || "");
+
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch (_) {
+      // Fall back to the classic selection-based copy path for browsers that
+      // block clipboard permissions on private local pages.
+    }
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "readonly");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "0";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  const copied = document.execCommand("copy");
+  document.body.removeChild(textarea);
+
+  if (!copied) {
+    throw new Error("Clipboard access was blocked by the browser.");
+  }
 }
 
 async function openExternal(url) {
@@ -308,6 +339,62 @@ function setEditorEnabled(enabled) {
 function updateSyncStatus(message, tone = "") {
   elements.syncStatus.textContent = message;
   elements.syncStatus.dataset.tone = tone;
+}
+
+function buildVerificationSnapshot() {
+  const config = state.config || {};
+  const appStatus = state.appStatus || {};
+  const hostMode = config.mode === "host";
+  const runtimeLabel = syncPadDesktop ? "Electron desktop shell" : "Browser client";
+  const accessOrigin = syncPadDesktop
+    ? (appStatus.origin || buildOrigin(config.host || DEFAULT_LOCAL_HOST, config.port || DEFAULT_PORT))
+    : (appStatus.origin || config.remoteOrigin || "");
+  const storageFile = appStatus.storageFile || "No storage path available";
+  const configFile = config.configFile || appStatus.configFile || "No config file available";
+  const setupState = appStatus.setupComplete === false ? "Setup incomplete" : "Setup complete";
+
+  return {
+    runtimeLabel,
+    modeLabel: hostMode ? "Host mode" : "Client mode",
+    accessLabel: accessOrigin || "No access address available",
+    storageLabel: storageFile,
+    configLabel: configFile,
+    setupLabel: setupState
+  };
+}
+
+function renderVerificationSnapshot() {
+  if (!elements.runtimeShell) {
+    return;
+  }
+
+  const snapshot = buildVerificationSnapshot();
+  elements.runtimeShell.textContent = snapshot.runtimeLabel;
+  elements.runtimeMode.textContent = snapshot.modeLabel;
+  elements.runtimeAccess.textContent = snapshot.accessLabel;
+  elements.runtimeStorage.textContent = snapshot.storageLabel;
+  elements.runtimeConfig.textContent = snapshot.configLabel;
+}
+
+async function copyVerificationSnapshot() {
+  const snapshot = buildVerificationSnapshot();
+  const lines = [
+    `Runtime: ${snapshot.runtimeLabel}`,
+    `Mode: ${snapshot.modeLabel}`,
+    `Access: ${snapshot.accessLabel}`,
+    `Storage: ${snapshot.storageLabel}`,
+    `Config: ${snapshot.configLabel}`,
+    `State: ${snapshot.setupLabel}`
+  ];
+
+  await copyText(lines.join("\n"));
+  if (elements.copyVerificationButton) {
+    const originalLabel = elements.copyVerificationButton.textContent;
+    elements.copyVerificationButton.textContent = "Copied";
+    window.setTimeout(() => {
+      elements.copyVerificationButton.textContent = originalLabel || "Copy verification";
+    }, 1200);
+  }
 }
 
 function updateNoteStats(content) {
@@ -849,6 +936,7 @@ async function saveSettings() {
   state.config = saved;
   state.syncLabel = saved.mode === "host" ? "Private Tailscale sync app" : "Remote SyncPad client";
   state.serverTone = saved.mode === "host" ? "connected" : "local";
+  renderVerificationSnapshot();
   closeSettingsModal();
   closeOnboardingModal();
 }
@@ -873,6 +961,7 @@ async function completeOnboarding(mode) {
   state.config = saved;
   state.syncLabel = saved.mode === "host" ? "Private Tailscale sync app" : "Remote SyncPad client";
   state.serverTone = saved.mode === "host" ? "connected" : "local";
+  renderVerificationSnapshot();
   closeOnboardingModal();
 }
 
@@ -974,10 +1063,12 @@ function setupLiveSync() {
 async function bootstrapDesktopSettings() {
   if (!syncPadDesktop) {
     elements.settingsButton.hidden = true;
+    renderVerificationSnapshot();
     return;
   }
 
   state.config = await syncPadDesktop.getConfig();
+  renderVerificationSnapshot();
   syncPadDesktop.onOpenSettings(() => {
     openSettingsModal();
   });
@@ -992,11 +1083,10 @@ async function bootstrap() {
 
   const status = await apiFetch("/api/status");
   state.appStatus = status;
-  elements.storagePath.textContent = status.storageFile;
-  elements.serverOrigin.textContent = status.origin;
   state.syncLabel = status.sync;
   state.serverTone = status.host === "127.0.0.1" ? "local" : "connected";
   updateSyncStatus(state.syncLabel, state.serverTone);
+  renderVerificationSnapshot();
   applyEditorPreferences();
 
   elements.searchInput.addEventListener("input", applySearch);
@@ -1070,6 +1160,12 @@ async function bootstrap() {
   elements.settingsRemoteOrigin.addEventListener("input", updateSettingsSummary);
   elements.settingsCopyButton.addEventListener("click", () => {
     copyText(elements.settingsAccessUrl.textContent).catch(console.error);
+  });
+  elements.copyVerificationButton?.addEventListener("click", () => {
+    copyVerificationSnapshot().catch((error) => {
+      console.error(error);
+      updateSyncStatus("Verification copy failed", "error");
+    });
   });
   elements.settingsOpenButton.addEventListener("click", () => {
     openExternal(elements.settingsAccessUrl.textContent).catch(console.error);
