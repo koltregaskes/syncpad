@@ -23,7 +23,7 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "electron": "^39.8.10",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^26.15.3"
   },
   "build": {
     "appId": "com.koltregaskes.syncpad",
