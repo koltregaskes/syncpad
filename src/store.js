@@ -57,8 +57,55 @@ async function saveState(state) {
   await fs.writeFile(file, JSON.stringify(state, null, 2), "utf-8");
 }
 
+const HISTORY_LIMIT = 20;
+
 function sortNotes(notes) {
   return [...notes].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+function normaliseRevision(entry) {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+
+  const savedAt = typeof entry.savedAt === "string" && entry.savedAt
+    ? entry.savedAt
+    : "";
+
+  if (!savedAt) {
+    return null;
+  }
+
+  const title = typeof entry.title === "string" && entry.title.trim()
+    ? entry.title.trim()
+    : "Untitled note";
+
+  return {
+    id: typeof entry.id === "string" && entry.id ? entry.id : randomUUID(),
+    title,
+    content: typeof entry.content === "string" ? entry.content : "",
+    savedAt
+  };
+}
+
+function normaliseHistory(history) {
+  if (!Array.isArray(history)) {
+    return [];
+  }
+
+  return history
+    .map(normaliseRevision)
+    .filter(Boolean)
+    .slice(0, HISTORY_LIMIT);
+}
+
+function snapshotNote(note) {
+  return {
+    id: randomUUID(),
+    title: note.title || "Untitled note",
+    content: typeof note.content === "string" ? note.content : "",
+    savedAt: note.updatedAt
+  };
 }
 
 function normaliseNote(note) {
@@ -83,7 +130,8 @@ function normaliseNote(note) {
     title,
     content,
     createdAt,
-    updatedAt
+    updatedAt,
+    history: normaliseHistory(note.history)
   };
 }
 
@@ -127,7 +175,8 @@ async function createNote(title = "Untitled note") {
     title,
     content: "",
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    history: []
   };
 
   state.notes.push(note);
@@ -151,7 +200,8 @@ async function duplicateNote(noteId) {
     title: `${source.title || "Untitled note"} copy`,
     content: source.content || "",
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    history: []
   };
 
   state.notes.push(note);
@@ -179,12 +229,65 @@ async function saveNote(noteId, updates) {
   if (expectedUpdatedAt && hasRealChange && note.updatedAt !== expectedUpdatedAt) {
     const error = new Error("This note changed on another device");
     error.code = "CONFLICT";
-    error.latestNote = { ...note };
+    error.latestNote = { ...note, history: normaliseHistory(note.history) };
     throw error;
+  }
+
+  const history = normaliseHistory(note.history);
+  if (hasRealChange) {
+    history.unshift(snapshotNote(note));
   }
 
   note.title = nextTitle;
   note.content = nextContent;
+  note.history = history.slice(0, HISTORY_LIMIT);
+  note.updatedAt = new Date().toISOString();
+  state.lastOpenNoteId = note.id;
+
+  await saveState(state);
+  return note;
+}
+
+async function restoreNoteRevision(noteId, revisionId, updates = {}) {
+  const state = await loadState();
+  const note = state.notes.find((item) => item.id === noteId);
+
+  if (!note) {
+    const error = new Error("Note not found");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+
+  const history = normaliseHistory(note.history);
+  const revision = history.find((item) => item.id === revisionId);
+
+  if (!revision) {
+    const error = new Error("Revision not found");
+    error.code = "NOT_FOUND";
+    throw error;
+  }
+
+  const expectedUpdatedAt = typeof updates.expectedUpdatedAt === "string"
+    ? updates.expectedUpdatedAt
+    : null;
+
+  if (expectedUpdatedAt && note.updatedAt !== expectedUpdatedAt) {
+    const error = new Error("This note changed on another device");
+    error.code = "CONFLICT";
+    error.latestNote = { ...note, history };
+    throw error;
+  }
+
+  const nextHistory = history.filter((item) => item.id !== revisionId);
+  const currentDiffers = note.title !== revision.title || note.content !== revision.content;
+
+  if (currentDiffers) {
+    nextHistory.unshift(snapshotNote(note));
+  }
+
+  note.title = revision.title;
+  note.content = revision.content;
+  note.history = nextHistory.slice(0, HISTORY_LIMIT);
   note.updatedAt = new Date().toISOString();
   state.lastOpenNoteId = note.id;
 
@@ -273,6 +376,7 @@ module.exports = {
   importBackup,
   listNotes,
   loadState,
+  restoreNoteRevision,
   saveNote,
   setLastOpenNote
 };

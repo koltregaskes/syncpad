@@ -16,6 +16,7 @@
 - Rename notes by editing the first line or note title
 - Search notes from the sidebar
 - Duplicate the current note when you want a quick variation
+- Restore an earlier version from Earlier versions. The text you replace stays in that list
 - Delete notes you no longer need
 - Use `Find`, `Replace`, and `Replace all` inside the current note
 - Switch between `Edit`, `Split`, and `Preview`
@@ -59,4 +60,5 @@
 - Sync is private live hosting, not peer-to-peer magic
 - One device must host the note server
 - Same-note simultaneous editing is protected with conflict copies, not character-by-character collaborative merging
+- History keeps the last 20 saves of a note. Restore still refuses to overwrite a copy that changed on another device
 - Markdown is previewed cleanly, but this is still a writing tool rather than a rich page layout app

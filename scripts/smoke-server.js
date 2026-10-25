@@ -41,12 +41,43 @@ async function main() {
 
     const listResponse = await fetch(`${server.origin}/api/notes`);
     const listPayload = await listResponse.json();
+    const saved = listPayload.notes[0];
+    const revision = saved?.history?.[0];
 
-    console.log(JSON.stringify({
-      noteCount: listPayload.notes.length,
-      firstTitle: listPayload.notes[0]?.title,
-      origin: server.origin
-    }, null, 2));
+    if (!revision) {
+      throw new Error("Expected the server save to keep an earlier version");
+    }
+
+    const restoreResponse = await fetch(
+      `${server.origin}/api/notes/${saved.id}/history/${revision.id}/restore`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          expectedUpdatedAt: saved.updatedAt
+        })
+      }
+    );
+    const restored = await restoreResponse.json();
+
+    if (!restoreResponse.ok || !restored.note?.content?.includes("This is a synced note.")) {
+      throw new Error("Restore did not return the earlier server note");
+    }
+
+    if (!restored.note.content.endsWith("Updated.") && restored.note.history[0]?.content?.includes("Updated.")) {
+      console.log(JSON.stringify({
+        noteCount: listPayload.notes.length,
+        firstTitle: restored.note.title,
+        restoredContent: restored.note.content,
+        replacedKept: restored.note.history[0]?.content?.includes("Updated."),
+        origin: server.origin
+      }, null, 2));
+      return;
+    }
+
+    throw new Error("Restore did not keep the replaced server text in history");
   } finally {
     await server.stop();
   }

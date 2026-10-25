@@ -40,6 +40,9 @@ const elements = {
   contentInput: document.getElementById("content-input"),
   previewPanel: document.getElementById("preview-panel"),
   editorHeading: document.getElementById("editor-heading"),
+  historyPanel: document.getElementById("history-panel"),
+  historyCount: document.getElementById("history-count"),
+  historyList: document.getElementById("history-list"),
   saveState: document.getElementById("save-state"),
   noteStats: document.getElementById("note-stats"),
   caretPosition: document.getElementById("caret-position"),
@@ -568,6 +571,7 @@ function renderEditor() {
     elements.titleInput.value = "";
     elements.contentInput.value = "";
     elements.saveState.textContent = "No note selected";
+    renderHistory(null);
     updateNoteStats("");
     updateCaretPosition();
     renderPreview();
@@ -579,9 +583,60 @@ function renderEditor() {
   elements.titleInput.value = note.title || "";
   elements.contentInput.value = note.content || "";
   elements.saveState.textContent = `Last saved ${formatTimestamp(note.updatedAt)}`;
+  renderHistory(note);
   updateNoteStats(note.content || "");
   updateCaretPosition();
   renderPreview();
+}
+
+function renderHistory(note) {
+  if (!elements.historyPanel) {
+    return;
+  }
+
+  if (!note) {
+    elements.historyPanel.hidden = true;
+    elements.historyList.innerHTML = "";
+    elements.historyCount.textContent = "";
+    return;
+  }
+
+  const history = Array.isArray(note.history) ? note.history : [];
+  elements.historyPanel.hidden = false;
+  elements.historyCount.textContent = history.length
+    ? `${history.length} saved`
+    : "None yet";
+
+  if (!history.length) {
+    elements.historyList.innerHTML = '<p class="history-empty">No earlier versions yet. History is kept when this note is saved.</p>';
+    return;
+  }
+
+  elements.historyList.innerHTML = history
+    .map((revision) => {
+      const preview = (revision.content || "Empty note").trim().replace(/\s+/g, " ").slice(0, 90);
+
+      return `
+        <div class="history-item">
+          <div class="history-item__copy">
+            <strong>${escapeHtml(revision.title || "Untitled note")}</strong>
+            <span>${escapeHtml(formatTimestamp(revision.savedAt))}</span>
+            <p>${escapeHtml(preview || "Empty note")}</p>
+          </div>
+          <button class="ghost-button ghost-button--small" type="button" data-revision-id="${escapeHtml(revision.id)}">Restore</button>
+        </div>
+      `;
+    })
+    .join("");
+
+  for (const button of elements.historyList.querySelectorAll("[data-revision-id]")) {
+    button.addEventListener("click", () => {
+      restoreRevision(button.dataset.revisionId).catch((error) => {
+        console.error(error);
+        elements.saveState.textContent = "Restore failed";
+      });
+    });
+  }
 }
 
 function applySearch() {
@@ -720,6 +775,60 @@ async function saveActiveNote() {
     state.pendingRemoteRefresh = false;
     await refreshNotes(payload.note.id);
   }
+}
+
+async function restoreRevision(revisionId) {
+  const note = getActiveNote();
+  if (!note || !revisionId) {
+    return;
+  }
+
+  if (state.isDirty) {
+    window.clearTimeout(state.saveTimer);
+    await saveActiveNote();
+  }
+
+  const current = getActiveNote();
+  if (state.isDirty || !current || current.id !== note.id) {
+    return;
+  }
+
+  let payload;
+
+  try {
+    payload = await apiFetch(`/api/notes/${current.id}/history/${revisionId}/restore`, {
+      method: "POST",
+      body: JSON.stringify({
+        expectedUpdatedAt: current.updatedAt
+      })
+    });
+  } catch (error) {
+    if (error.status === 409 && error.payload?.latestNote) {
+      const draft = {
+        title: elements.titleInput.value.trim() || "Untitled note",
+        content: elements.contentInput.value
+      };
+      const conflictCopy = await apiFetch("/api/notes", {
+        method: "POST",
+        body: JSON.stringify({
+          title: `${draft.title} conflict copy`,
+          content: draft.content
+        })
+      });
+      state.isDirty = false;
+      state.pendingRemoteRefresh = false;
+      await refreshNotes(conflictCopy.note.id);
+      elements.saveState.textContent = "Another device changed this note. Your edits were kept as a conflict copy.";
+      updateSyncStatus("Remote edit detected. Conflict copy created.", "warning");
+      return;
+    }
+
+    throw error;
+  }
+
+  state.isDirty = false;
+  await refreshNotes(payload.note.id);
+  elements.saveState.textContent = "Restored an earlier version. The replaced text is still in history.";
 }
 
 function queueSave() {

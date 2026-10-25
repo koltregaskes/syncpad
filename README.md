@@ -62,6 +62,7 @@ The app now works as:
 - Private web client is working
 - Local note storage works through a JSON store under `LOCALAPPDATA\MyData\SyncPad`
 - Note list, search, create, duplicate, delete, autosave, export, and import are implemented
+- Each save keeps the previous title and text, up to 20 versions, and Restore puts that text back while leaving the replaced text in history
 - Markdown preview, find/replace, wrap toggle, zoom controls, and live word/character counts are implemented
 - Private live sync works when the app is hosted on `127.0.0.1` for one machine or on your Tailscale IP for your own devices
 - A saved host/client setup screen is built into the desktop app
@@ -71,11 +72,10 @@ The app now works as:
 
 ## Next Steps
 
-1. Add richer note history and recovery tools
-2. Improve same-note conflict handling further if needed
-3. Add optional pinned notes or tabs if the day-to-day workflow wants them
-4. Add optional direct file import or export beyond JSON backup
-5. Keep polishing the private-network hosting workflow
+1. Improve same-note conflict handling further if needed
+2. Add optional pinned notes or tabs if the day-to-day workflow wants them
+3. Add optional direct file import or export beyond JSON backup
+4. Keep polishing the private-network hosting workflow
 
 ## Positioning
 

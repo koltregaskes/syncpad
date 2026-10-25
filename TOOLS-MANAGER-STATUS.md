@@ -1,24 +1,24 @@
 ﻿# Tools Manager Status
 
-Updated: 2026-04-21
+Updated: 2026-10-25
 Tool: SyncPad
 Slug: `syncpad`
 Owner session: `platform-manager`
 
 ## Current State
 - RAG: `Amber`
-- Completion: `94%`
+- Completion: `95%`
 - Phase: `phase-2-depth`
 - Install or build state: Windows installer + host mode
-- Last reviewed: `2026-04-21`
+- Last reviewed: `2026-10-25`
 
 ## Blockers
 - Still not a fully conflict-free multi-device final notes product.
 - No hard blocker remains on the desktop launch path. The Electron shell now starts cleanly on this machine after forcing the safer GPU-disabled startup switches before app ready.
-- Note history and stronger conflict recovery still need product-depth work.
+- Stronger conflict recovery is still open. History restore does not merge simultaneous edits.
 
 ## Next Actions
-- Keep the browser/client surface clean, then move into note history and stronger conflict recovery.
+- Improve same-note conflict recovery beyond conflict copies.
 - Add a deeper settings-flow proof if we expand setup or multi-device onboarding again.
 
 ## Dependencies
@@ -35,6 +35,7 @@ Owner session: `platform-manager`
 ## Notes
 - This is the standard repo-root manager snapshot for the Tools side.
 - The private Tools Hub and local session inbox should treat this file as the canonical repo-level manager note.
+- Local note history now keeps the previous title and text on each real save, capped at 20, and Restore writes the replaced text back into that history. Conflict copies are unchanged.
 - Latest manager pass improved host/client guidance so the app now tells you when an address is local-only and which address should be shared with other devices.
 - Browser proof is currently clean on a fresh temporary host route after wiring the shipped app icon.
 - Direct Electron proof now passes on this machine after hardening the app startup with explicit GPU-disabled Chromium switches in `src/main.js`.

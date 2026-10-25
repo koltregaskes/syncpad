@@ -252,6 +252,39 @@ function createSyncPadServer({ host = DEFAULT_HOST, port = DEFAULT_PORT } = {}) 
         writeJson(response, 200, { noteId });
         return;
       }
+
+      if (action === "history" && segments[5] === "restore" && request.method === "POST") {
+        const revisionId = segments[4];
+
+        if (!revisionId) {
+          writeError(response, 404, "Revision not found");
+          return;
+        }
+
+        try {
+          const payload = await readJsonBody(request);
+          const note = await store.restoreNoteRevision(noteId, revisionId, payload);
+          broadcast("notes-changed", {
+            type: "restored",
+            noteId: note.id,
+            updatedAt: note.updatedAt
+          });
+          writeJson(response, 200, { note });
+        } catch (error) {
+          if (error.code === "CONFLICT") {
+            writeError(response, 409, error.message, { latestNote: error.latestNote });
+            return;
+          }
+
+          if (error.code === "NOT_FOUND") {
+            writeError(response, 404, error.message);
+            return;
+          }
+
+          throw error;
+        }
+        return;
+      }
     }
 
     writeError(response, 404, "Not found");
