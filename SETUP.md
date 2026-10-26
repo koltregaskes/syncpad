@@ -74,8 +74,8 @@ npm.cmd run dist:win
 
 This now produces:
 
-- `dist\SyncPad-0.3.0-installer-x64.exe`
-- `dist\SyncPad-0.3.0-portable-x64.exe`
+- `dist\SyncPad-0.3.1-installer-x64.exe`
+- `dist\SyncPad-0.3.1-portable-x64.exe`
 
 If Windows leaves `win-unpacked` locked after packaging, run:
 

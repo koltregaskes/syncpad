@@ -59,6 +59,14 @@ async function saveState(state) {
 
 const HISTORY_LIMIT = 20;
 
+function nextUpdatedAt(previous) {
+  const now = new Date().toISOString();
+  if (typeof previous === "string" && previous && now <= previous) {
+    return new Date(Date.parse(previous) + 1).toISOString();
+  }
+  return now;
+}
+
 function sortNotes(notes) {
   return [...notes].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
@@ -241,7 +249,7 @@ async function saveNote(noteId, updates) {
   note.title = nextTitle;
   note.content = nextContent;
   note.history = history.slice(0, HISTORY_LIMIT);
-  note.updatedAt = new Date().toISOString();
+  note.updatedAt = nextUpdatedAt(note.updatedAt);
   state.lastOpenNoteId = note.id;
 
   await saveState(state);
@@ -288,7 +296,7 @@ async function restoreNoteRevision(noteId, revisionId, updates = {}) {
   note.title = revision.title;
   note.content = revision.content;
   note.history = nextHistory.slice(0, HISTORY_LIMIT);
-  note.updatedAt = new Date().toISOString();
+  note.updatedAt = nextUpdatedAt(note.updatedAt);
   state.lastOpenNoteId = note.id;
 
   await saveState(state);
