@@ -32,7 +32,7 @@ if (!hasSingleInstanceLock) {
 }
 
 function isHostMode() {
-  return runtimeConfig?.mode !== "client";
+  return runtimeConfig?.setupComplete !== true || runtimeConfig?.mode !== "client";
 }
 
 function getLaunchOrigin() {
