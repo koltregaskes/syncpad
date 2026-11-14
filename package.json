@@ -10,7 +10,8 @@
     "smoke-store": "node scripts/smoke-store.js",
     "smoke-server": "node scripts/smoke-server.js",
     "dist:win": "electron-builder --win nsis portable",
-    "pack:dir": "electron-builder --dir"
+    "pack:dir": "electron-builder --dir",
+    "smoke-desktop": "node scripts/smoke-desktop.js"
   },
   "keywords": [
     "notes",
@@ -22,8 +23,9 @@
   "private": true,
   "license": "UNLICENSED",
   "devDependencies": {
-    "electron": "^39.8.10",
-    "electron-builder": "^26.15.3"
+    "electron": "^42.11.16",
+    "electron-builder": "^26.15.3",
+    "playwright": "^1.65.1"
   },
   "build": {
     "appId": "com.koltregaskes.syncpad",
@@ -63,5 +65,8 @@
     "portable": {
       "artifactName": "SyncPad-${version}-portable-${arch}.${ext}"
     }
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
